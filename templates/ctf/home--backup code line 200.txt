@@ -1,0 +1,19 @@
+<div class="container mt-5">
+    <!-- Terminal Animation -->
+    <div class="row">
+        <div class="col-lg-10 offset-lg-1">
+            <div class="terminal-container">
+                <div class="terminal-header">
+                    <div class="terminal-buttons">
+                        <div class="terminal-button red"></div>
+                        <div class="terminal-button yellow"></div>
+                        <div class="terminal-button green"></div>
+                    </div>
+                    <div class="terminal-title">Cyberblocknexus@ctf:~</div>
+                </div>
+                <div class="terminal-content" id="terminal-content">
+                    <!-- Terminal content will be dynamically added by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>

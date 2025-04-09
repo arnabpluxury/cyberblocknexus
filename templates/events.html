@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block title %}Events{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row mb-4">
+        <div class="col">
+            <h1>Upcoming Events</h1>
+        </div>
+        {% if current_user.is_authenticated %}
+        <div class="col-auto">
+            <a href="#" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#registerEventModal">
+                <i class="bi bi-calendar-plus"></i> Register for Event
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="row">
+        {% for event in upcoming_events %}
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                {% if event.image %}
+                <img src="{{ url_for('static', filename='img/events/' + event.image) }}" class="card-img-top" alt="{{ event.title }}">
+                {% endif %}
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <h5 class="card-title">{{ event.title }}</h5>
+                        <span class="badge bg-primary">{{ event.category }}</span>
+                    </div>
+                    <p class="card-text">{{ event.description }}</p>
+                    <div class="mt-3">
+                        <p class="mb-1">
+                            <i class="bi bi-calendar"></i> 
+                            {{ event.date.strftime('%B %d, %Y') }}
+                        </p>
+                        <p class="mb-1">
+                            <i class="bi bi-clock"></i>
+                            {{ event.date.strftime('%I:%M %p') }}
+                        </p>
+                        <p class="mb-1">
+                            <i class="bi bi-geo-alt"></i>
+                            {{ event.location }}
+                        </p>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    {% if current_user.is_authenticated %}
+                        {% if event in current_user.registered_events %}
+                        <button class="btn btn-success" disabled>
+                            <i class="bi bi-check-circle"></i> Registered
+                        </button>
+                        {% else %}
+                        <a href="{{ url_for('register_event', event_id=event.id) }}" class="btn btn-primary">
+                            Register Now
+                        </a>
+                        {% endif %}
+                    {% else %}
+                        <a href="{{ url_for('login') }}" class="btn btn-outline-primary">
+                            Login to Register
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <h2 class="mt-5 mb-4">Past Events</h2>
+    <div class="row">
+        {% for event in past_events %}
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                {% if event.image %}
+                <img src="{{ url_for('static', filename='img/events/' + event.image) }}" class="card-img-top" alt="{{ event.title }}">
+                {% endif %}
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <h5 class="card-title">{{ event.title }}</h5>
+                        <span class="badge bg-secondary">Past Event</span>
+                    </div>
+                    <p class="card-text">{{ event.description }}</p>
+                    <div class="mt-3">
+                        <p class="mb-1">
+                            <i class="bi bi-calendar"></i>
+                            {{ event.date.strftime('%B %d, %Y') }}
+                        </p>
+                        <p class="mb-1">
+                            <i class="bi bi-people"></i>
+                            {% set attendees_count = event.registered_events|default([])|length %}
+                            {{ attendees_count }} Attendees
+                        </p>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    {% if event.resources %}
+                    <a href="{{ url_for('event_detail', event_id=event.id) }}" class="btn btn-outline-primary">
+                        View Details
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Event Registration Modal -->
+<div class="modal fade" id="registerEventModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Event Registration</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="eventRegistrationForm" method="POST" action="#" onsubmit="submitEventRegistration(); return false;">
+                    <div class="mb-3">
+                        <label for="eventSelect" class="form-label">Select Event</label>
+                        <select class="form-select" id="eventSelect" name="event_id" required>
+                            <option value="">Choose an event...</option>
+                            {% for event in upcoming_events %}
+                            <option value="{{ event.id }}">{{ event.title }} - {{ event.date.strftime('%B %d, %Y') }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Additional Notes</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="submit" form="eventRegistrationForm" class="btn btn-primary">Register</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+function submitEventRegistration() {
+    const eventId = document.getElementById('eventSelect').value;
+    if (eventId) {
+        window.location.href = "{{ url_for('register_event', event_id=0) }}".replace('0', eventId);
+    } else {
+        alert('Please select an event');
+    }
+}
+</script>
+{% endblock %}
+{% endblock %}

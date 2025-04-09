@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+
+{% block title %}Event Management - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <nav class="col-md-2 d-md-block bg-light sidebar">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.users') }}">
+                            <i class="bi bi-people"></i> Users
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('admin.events') }}">
+                            <i class="bi bi-calendar-event"></i> Events
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.ctf_challenges') }}">
+                            <i class="bi bi-flag"></i> CTF Challenges
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="col-md-10 ms-sm-auto px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1>Event Management</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <a href="{{ url_for('admin.new_event') }}" class="btn btn-primary">
+                        <i class="bi bi-plus"></i> New Event
+                    </a>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <select class="form-select" id="typeFilter">
+                        <option value="all">All Types</option>
+                        <option value="workshop">Workshop</option>
+                        <option value="ctf">CTF Competition</option>
+                        <option value="networking">Networking</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="timeFilter">
+                        <option value="all">All Time</option>
+                        <option value="upcoming">Upcoming</option>
+                        <option value="past">Past</option>
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="searchInput" placeholder="Search events...">
+                        <button class="btn btn-outline-secondary" type="button">Search</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Events Table -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Date & Time</th>
+                                    <th>Location</th>
+                                    <th>Type</th>
+                                    <th>Registrations</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for event in events %}
+                                <tr>
+                                    <td>{{ event.title }}</td>
+                                    <td>{{ event.date.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    <td>{{ event.location }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ event.event_type|lower }}">
+                                            {{ event.event_type }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {{ event.registrations|length }}
+                                        <button type="button" class="btn btn-sm btn-link" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#registrationsModal{{ event.id }}">
+                                            View
+                                        </button>
+                                    </td>
+                                    <td>
+                                        {% if event.date > now %}
+                                            <span class="badge bg-success">Upcoming</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Past</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <a href="{{ url_for('admin.edit_event', event_id=event.id) }}" 
+                                               class="btn btn-sm btn-outline-primary">
+                                                Edit
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#deleteModal{{ event.id }}">
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <!-- Registrations Modal -->
+                                <div class="modal fade" id="registrationsModal{{ event.id }}" tabindex="-1">
+                                    <div class="modal-dialog modal-lg">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">{{ event.title }} - Registrations</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="table-responsive">
+                                                    <table class="table">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>User</th>
+                                                                <th>Email</th>
+                                                                <th>Registration Date</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {% for registration in event.registrations %}
+                                                            <tr>
+                                                                <td>{{ registration.user.username }}</td>
+                                                                <td>{{ registration.user.email }}</td>
+                                                                <td>{{ registration.registered_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                                            </tr>
+                                                            {% else %}
+                                                            <tr>
+                                                                <td colspan="3" class="text-center">No registrations yet</td>
+                                                            </tr>
+                                                            {% endfor %}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Delete Confirmation Modal -->
+                                <div class="modal fade" id="deleteModal{{ event.id }}" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Delete Event</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p>Are you sure you want to delete "{{ event.title }}"?</p>
+                                                <p class="text-danger">This action cannot be undone.</p>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                <form action="{{ url_for('admin.delete_event', event_id=event.id) }}" method="POST" class="d-inline">
+                                                    <button type="submit" class="btn btn-danger">Delete</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Event filtering
+    const typeFilter = document.getElementById('typeFilter');
+    const timeFilter = document.getElementById('timeFilter');
+    const searchInput = document.getElementById('searchInput');
+
+    function filterEvents() {
+        const type = typeFilter.value;
+        const time = timeFilter.value;
+        const search = searchInput.value.toLowerCase();
+
+        document.querySelectorAll('tbody tr').forEach(row => {
+            const eventType = row.cells[3].textContent.trim().toLowerCase();
+            const eventDate = new Date(row.cells[1].textContent);
+            const eventTitle = row.cells[0].textContent.toLowerCase();
+            const now = new Date();
+
+            // Type filter
+            const matchesType = type === 'all' || eventType.includes(type);
+
+            // Time filter
+            let matchesTime = true;
+            if (time === 'upcoming') {
+                matchesTime = eventDate > now;
+            } else if (time === 'past') {
+                matchesTime = eventDate < now;
+            } else if (time === 'today') {
+                matchesTime = eventDate.toDateString() === now.toDateString();
+            } else if (time === 'week') {
+                const weekStart = new Date(now);
+                weekStart.setDate(now.getDate() - now.getDay());
+                const weekEnd = new Date(weekStart);
+                weekEnd.setDate(weekStart.getDate() + 6);
+                matchesTime = eventDate >= weekStart && eventDate <= weekEnd;
+            } else if (time === 'month') {
+                matchesTime = eventDate.getMonth() === now.getMonth() && 
+                             eventDate.getFullYear() === now.getFullYear();
+            }
+
+            // Search filter
+            const matchesSearch = eventTitle.includes(search);
+
+            row.style.display = matchesType && matchesTime && matchesSearch ? '' : 'none';
+        });
+    }
+
+    typeFilter.addEventListener('change', filterEvents);
+    timeFilter.addEventListener('change', filterEvents);
+    searchInput.addEventListener('input', filterEvents);
+});
+</script>
+{% endblock %}
+{% endblock %}

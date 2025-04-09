@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block title %}Resources{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4">Learning Resources</h1>
+    
+    <div class="row">
+        <!-- Web Security -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h3 class="card-title">Web Security</h3>
+                    <div class="list-group mt-3">
+                        <a href="#" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">SQL Injection Basics</h5>
+                                <small class="text-muted">Beginner</small>
+                            </div>
+                            <p class="mb-1">Learn about SQL injection vulnerabilities and how to prevent them.</p>
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">XSS Prevention</h5>
+                                <small class="text-muted">Intermediate</small>
+                            </div>
+                            <p class="mb-1">Understanding Cross-Site Scripting attacks and mitigation strategies.</p>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cryptography -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h3 class="card-title">Cryptography</h3>
+                    <div class="list-group mt-3">
+                        <a href="#" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">Introduction to Cryptography</h5>
+                                <small class="text-muted">Beginner</small>
+                            </div>
+                            <p class="mb-1">Basic concepts of encryption, decryption, and cryptographic algorithms.</p>
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">Hash Functions</h5>
+                                <small class="text-muted">Intermediate</small>
+                            </div>
+                            <p class="mb-1">Understanding different hash functions and their applications.</p>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Binary Exploitation -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h3 class="card-title">Binary Exploitation</h3>
+                    <div class="list-group mt-3">
+                        <a href="#" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">Buffer Overflow Basics</h5>
+                                <small class="text-muted">Advanced</small>
+                            </div>
+                            <p class="mb-1">Learn about buffer overflow vulnerabilities and exploitation techniques.</p>
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">Reverse Engineering</h5>
+                                <small class="text-muted">Advanced</small>
+                            </div>
+                            <p class="mb-1">Introduction to reverse engineering and binary analysis.</p>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Forensics -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h3 class="card-title">Digital Forensics</h3>
+                    <div class="list-group mt-3">
+                        <a href="#" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">File Analysis</h5>
+                                <small class="text-muted">Intermediate</small>
+                            </div>
+                            <p class="mb-1">Learn about file formats and hidden data analysis.</p>
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">Network Forensics</h5>
+                                <small class="text-muted">Advanced</small>
+                            </div>
+                            <p class="mb-1">Analyzing network traffic and investigating security incidents.</p>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tools Section -->
+    <h2 class="mb-4 mt-4">Recommended Tools</h2>
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Web Security Tools</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="bi bi-tools"></i> Burp Suite
+                            <small class="text-muted d-block">Web vulnerability scanner and proxy</small>
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-tools"></i> OWASP ZAP
+                            <small class="text-muted d-block">Open-source web security scanner</small>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Forensics Tools</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="bi bi-tools"></i> Wireshark
+                            <small class="text-muted d-block">Network protocol analyzer</small>
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-tools"></i> Autopsy
+                            <small class="text-muted d-block">Digital forensics platform</small>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Reverse Engineering</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="bi bi-tools"></i> Ghidra
+                            <small class="text-muted d-block">Software reverse engineering framework</small>
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-tools"></i> IDA Pro
+                            <small class="text-muted d-block">Disassembler and debugger</small>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

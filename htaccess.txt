@@ -1,0 +1,17 @@
+# For static site approach
+Options -Indexes
+DirectoryIndex index.html
+
+# For PHP bridge approach (if using)
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+    
+    # Don't rewrite files or directories
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+    
+    # Rewrite everything else to the PHP bridge
+    RewriteRule ^ python_bridge.php [L]
+</IfModule>

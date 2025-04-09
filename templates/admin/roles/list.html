@@ -1,0 +1,121 @@
+{% extends 'admin/layout.html' %}
+
+{% block title %}Manage Roles{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Role Management</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+        <li class="breadcrumb-item active">Roles</li>
+    </ol>
+    
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <i class="fas fa-users-cog me-1"></i>
+                Roles
+            </div>
+            {% if current_user.has_permission('create_roles') %}
+            <a href="{{ url_for('roles.new_role') }}" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus"></i> Create New Role
+            </a>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="rolesTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Users</th>
+                            <th>System Role</th>
+                            <th>Permissions</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for role in roles %}
+                        <tr>
+                            <td>{{ role.name }}</td>
+                            <td>{{ role.description }}</td>
+                            <td>{{ role.users.count() }}</td>
+                            <td>
+                                {% if role.is_system %}
+                                <span class="badge bg-info">System</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Custom</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ role.permissions|length }}</td>
+                            <td>
+                                {% if current_user.has_permission('edit_roles') %}
+                                <a href="{{ url_for('roles.edit_role', role_id=role.id) }}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                                {% endif %}
+                                
+                                {% if not role.is_system and current_user.has_permission('delete_roles') %}
+                                <button type="button" class="btn btn-sm btn-danger" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#deleteRoleModal" 
+                                        data-role-id="{{ role.id }}" 
+                                        data-role-name="{{ role.name }}">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Role Modal -->
+<div class="modal fade" id="deleteRoleModal" tabindex="-1" aria-labelledby="deleteRoleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteRoleModalLabel">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the role <strong id="roleNameToDelete"></strong>?</p>
+                <p class="text-danger">This action cannot be undone. All users with this role will lose the associated permissions.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteRoleForm" method="POST" action="">
+                    <button type="submit" class="btn btn-danger">Delete Role</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        // Initialize DataTable
+        $('#rolesTable').DataTable({
+            order: [[0, 'asc']]
+        });
+        
+        // Setup delete modal
+        $('#deleteRoleModal').on('show.bs.modal', function (event) {
+            const button = $(event.relatedTarget);
+            const roleId = button.data('role-id');
+            const roleName = button.data('role-name');
+            
+            const modal = $(this);
+            modal.find('#roleNameToDelete').text(roleName);
+            modal.find('#deleteRoleForm').attr('action', '/admin/roles/delete/' + roleId);
+        });
+    });
+</script>
+{% endblock %}

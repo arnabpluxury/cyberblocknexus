@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+{% block title %}{% if event %}Edit{% else %}New{% endif %} Event - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <nav class="col-md-2 d-md-block bg-light sidebar">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.users') }}">
+                            <i class="bi bi-people"></i> Users
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('admin.events') }}">
+                            <i class="bi bi-calendar-event"></i> Events
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.ctf_challenges') }}">
+                            <i class="bi bi-flag"></i> CTF Challenges
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="col-md-10 ms-sm-auto px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1>{% if event %}Edit{% else %}New{% endif %} Event</h1>
+            </div>
+
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-body">
+                            <form method="POST" enctype="multipart/form-data">
+                                <div class="mb-3">
+                                    <label for="title" class="form-label">Event Title</label>
+                                    <input type="text" class="form-control" id="title" name="title"
+                                           value="{{ event.title if event else '' }}" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="description" class="form-label">Description</label>
+                                    <textarea class="form-control" id="description" name="description" rows="5" required>{{ event.description if event else '' }}</textarea>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="date" class="form-label">Date & Time</label>
+                                            <input type="datetime-local" class="form-control" id="date" name="date"
+                                                   value="{{ event.date.strftime('%Y-%m-%dT%H:%M') if event else '' }}" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="event_type" class="form-label">Event Type</label>
+                                            <select class="form-select" id="event_type" name="event_type" required>
+                                                <option value="">Select Type</option>
+                                                <option value="workshop" {% if event and event.event_type == 'workshop' %}selected{% endif %}>Workshop</option>
+                                                <option value="ctf" {% if event and event.event_type == 'ctf' %}selected{% endif %}>CTF Competition</option>
+                                                <option value="networking" {% if event and event.event_type == 'networking' %}selected{% endif %}>Networking</option>
+                                                <option value="other" {% if event and event.event_type == 'other' %}selected{% endif %}>Other</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="location" class="form-label">Location</label>
+                                    <input type="text" class="form-control" id="location" name="location"
+                                           value="{{ event.location if event else '' }}" required>
+                                    <div class="form-text">For online events, use "Online" or platform name</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="capacity" class="form-label">Capacity</label>
+                                    <input type="number" class="form-control" id="capacity" name="capacity"
+                                           value="{{ event.capacity if event else '0' }}" min="0">
+                                    <div class="form-text">Set to 0 for unlimited capacity</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="requirements" class="form-label">Requirements</label>
+                                    <textarea class="form-control" id="requirements" name="requirements" rows="3">{{ event.requirements if event else '' }}</textarea>
+                                    <div class="form-text">List any prerequisites or requirements for participants</div>
+                                </div>
+
+                                {% if event %}
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="notify_registrants" name="notify_registrants">
+                                        <label class="form-check-label" for="notify_registrants">
+                                            Notify registered participants about changes
+                                        </label>
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                <div class="d-flex justify-content-between">
+                                    <button type="submit" class="btn btn-primary">
+                                        {% if event %}Save Changes{% else %}Create Event{% endif %}
+                                    </button>
+                                    <a href="{{ url_for('admin.events') }}" class="btn btn-outline-secondary">Cancel</a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                {% if event %}
+                <div class="col-md-4">
+                    <!-- Event Statistics -->
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Event Statistics</h5>
+                            <ul class="list-unstyled">
+                                <li>Created: {{ event.created_at.strftime('%Y-%m-%d') }}</li>
+                                <li>Total Registrations: {{ event.registrations|length }}</li>
+                                {% if event.capacity > 0 %}
+                                <li>Spots Remaining: {{ event.capacity - event.registrations|length }}</li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Quick Actions</h5>
+                            <div class="d-grid gap-2">
+                                <button type="button" class="btn btn-outline-primary"
+                                        onclick="window.open('{{ url_for('event_detail', event_id=event.id) }}', '_blank')">
+                                    View Public Page
+                                </button>
+                                <button type="button" class="btn btn-outline-success"
+                                        onclick="downloadRegistrations()">
+                                    Export Registrations
+                                </button>
+                                <button type="button" class="btn btn-outline-danger"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#cancelEventModal">
+                                    Cancel Event
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cancel Event Modal -->
+                <div class="modal fade" id="cancelEventModal" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Cancel Event</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Are you sure you want to cancel this event?</p>
+                                <p>This will:</p>
+                                <ul>
+                                    <li>Remove all registrations</li>
+                                    <li>Notify all registered participants</li>
+                                    <li>Mark the event as cancelled</li>
+                                </ul>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <form action="{{ url_for('admin.cancel_event', event_id=event.id) }}" method="POST">
+                                    <button type="submit" class="btn btn-danger">Cancel Event</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </main>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+function downloadRegistrations() {
+    window.location.href = "{{ url_for('admin.export_registrations', event_id=event.id) if event else '#' }}";
+}
+
+// Rich text editor for description
+document.addEventListener('DOMContentLoaded', function() {
+    const description = document.getElementById('description');
+    if (description) {
+        // Initialize your preferred rich text editor here
+        // Example: CKEDITOR.replace('description');
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}

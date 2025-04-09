@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+
+{% block title %}CTF Challenges - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <nav class="col-md-2 d-md-block bg-light sidebar">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.users') }}">
+                            <i class="bi bi-people"></i> Users
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.events') }}">
+                            <i class="bi bi-calendar-event"></i> Events
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('admin.ctf_challenges') }}">
+                            <i class="bi bi-flag"></i> CTF Challenges
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="col-md-10 ms-sm-auto px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1>CTF Challenge Management</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <a href="{{ url_for('admin.new_challenge') }}" class="btn btn-primary">
+                        <i class="bi bi-plus"></i> New Challenge
+                    </a>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <select class="form-select" id="categoryFilter">
+                        <option value="all">All Categories</option>
+                        {% for category in categories %}
+                        <option value="{{ category }}">{{ category }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="difficultyFilter">
+                        <option value="all">All Difficulties</option>
+                        <option value="easy">Easy</option>
+                        <option value="medium">Medium</option>
+                        <option value="hard">Hard</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="statusFilter">
+                        <option value="all">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Challenges Table -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Category</th>
+                                    <th>Difficulty</th>
+                                    <th>Points</th>
+                                    <th>Solves</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for challenge in challenges %}
+                                <tr>
+                                    <td>{{ challenge.title }}</td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ challenge.category }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{{ challenge.difficulty|lower }}">
+                                            {{ challenge.difficulty }}
+                                        </span>
+                                    </td>
+                                    <td>{{ challenge.points }}</td>
+                                    <td>{{ challenge.solves|length }}</td>
+                                    <td>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input toggle-challenge" type="checkbox"
+                                                   data-challenge-id="{{ challenge.id }}"
+                                                   {% if challenge.is_active %}checked{% endif %}>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <a href="{{ url_for('admin.edit_challenge', challenge_id=challenge.id) }}"
+                                               class="btn btn-sm btn-outline-primary">
+                                                Edit
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-outline-info"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#statsModal{{ challenge.id }}">
+                                                Stats
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <!-- Stats Modal -->
+                                <div class="modal fade" id="statsModal{{ challenge.id }}" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">{{ challenge.title }} - Statistics</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <ul class="list-unstyled">
+                                                    <li>Total Solves: {{ challenge.solves|length }}</li>
+                                                    <li>First Blood: 
+                                                        {% if challenge.solves %}
+                                                            {{ challenge.solves[0].user.username }}
+                                                            ({{ challenge.solves[0].solved_at.strftime('%Y-%m-%d %H:%M') }})
+                                                        {% else %}
+                                                            None yet
+                                                        {% endif %}
+                                                    </li>
+                                                </ul>
+                                                <h6>Recent Solves</h6>
+                                                <ul class="list-group">
+                                                    {% for solve in challenge.solves[-5:]|reverse %}
+                                                    <li class="list-group-item">
+                                                        {{ solve.user.username }}
+                                                        <small class="text-muted float-end">
+                                                            {{ solve.solved_at.strftime('%Y-%m-%d %H:%M') }}
+                                                        </small>
+                                                    </li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Challenge status toggle
+    document.querySelectorAll('.toggle-challenge').forEach(toggle => {
+        toggle.addEventListener('change', function() {
+            const challengeId = this.dataset.challengeId;
+            fetch(`/admin/api/challenge/${challengeId}/toggle-active`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status !== 'success') {
+                    this.checked = !this.checked;
+                    alert('Error updating challenge status');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                this.checked = !this.checked;
+                alert('Error updating challenge status');
+            });
+        });
+    });
+
+    // Filters
+    const filters = ['category', 'difficulty', 'status'];
+    filters.forEach(filter => {
+        document.getElementById(`${filter}Filter`).addEventListener('change', filterChallenges);
+    });
+
+    function filterChallenges() {
+        const category = document.getElementById('categoryFilter').value;
+        const difficulty = document.getElementById('difficultyFilter').value;
+        const status = document.getElementById('statusFilter').value;
+
+        document.querySelectorAll('tbody tr').forEach(row => {
+            const rowCategory = row.cells[1].textContent.trim();
+            const rowDifficulty = row.cells[2].textContent.trim().toLowerCase();
+            const rowStatus = row.cells[5].querySelector('input').checked ? 'active' : 'inactive';
+
+            const matchesCategory = category === 'all' || rowCategory === category;
+            const matchesDifficulty = difficulty === 'all' || rowDifficulty === difficulty;
+            const matchesStatus = status === 'all' || rowStatus === status;
+
+            row.style.display = matchesCategory && matchesDifficulty && matchesStatus ? '' : 'none';
+        });
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}

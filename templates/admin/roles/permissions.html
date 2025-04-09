@@ -1,0 +1,97 @@
+{% extends 'admin/layout.html' %}
+
+{% block title %}Permissions Overview{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Permissions Overview</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('roles.roles_list') }}">Roles</a></li>
+        <li class="breadcrumb-item active">Permissions</li>
+    </ol>
+    
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-shield-alt me-1"></i>
+                    System Permissions
+                </div>
+                <div class="card-body">
+                    <p class="mb-3">
+                        This page provides an overview of all available permissions in the system.
+                        Permissions are organized by category and can be assigned to roles.
+                    </p>
+                    
+                    <div class="accordion" id="permissionsAccordion">
+                        {% for category in categories %}
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading{{ category.name|replace(' ', '') }}">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" 
+                                        data-bs-target="#collapse{{ category.name|replace(' ', '') }}" 
+                                        aria-expanded="true" aria-controls="collapse{{ category.name|replace(' ', '') }}">
+                                    <strong>{{ category.name }}</strong> - {{ category.description }}
+                                </button>
+                            </h2>
+                            <div id="collapse{{ category.name|replace(' ', '') }}" class="accordion-collapse collapse show" 
+                                 aria-labelledby="heading{{ category.name|replace(' ', '') }}" data-bs-parent="#permissionsAccordion">
+                                <div class="accordion-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Permission Name</th>
+                                                    <th>Description</th>
+                                                    <th>System</th>
+                                                    <th>Used By Roles</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for permission in categorized_permissions[category.name] %}
+                                                <tr>
+                                                    <td><code>{{ permission.name }}</code></td>
+                                                    <td>{{ permission.description }}</td>
+                                                    <td>
+                                                        {% if permission.is_system %}
+                                                        <span class="badge bg-info">System</span>
+                                                        {% else %}
+                                                        <span class="badge bg-secondary">Custom</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        <div class="d-flex flex-wrap gap-1">
+                                                            {% for role in permission.roles %}
+                                                            <span class="badge bg-primary">{{ role.name }}</span>
+                                                            {% endfor %}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        // Initialize DataTables for each permission category
+        $('.table').DataTable({
+            paging: false,
+            searching: false,
+            info: false
+        });
+    });
+</script>
+{% endblock %}

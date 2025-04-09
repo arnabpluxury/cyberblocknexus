@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Edit User - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <nav class="col-md-2 d-md-block bg-light sidebar">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('admin.users') }}">
+                            <i class="bi bi-people"></i> Users
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.events') }}">
+                            <i class="bi bi-calendar-event"></i> Events
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.ctf_challenges') }}">
+                            <i class="bi bi-flag"></i> CTF Challenges
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="col-md-10 ms-sm-auto px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1>Edit User: {{ user.username }}</h1>
+            </div>
+
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-body">
+                            <form method="POST">
+                                <div class="mb-3">
+                                    <label for="username" class="form-label">Username</label>
+                                    <input type="text" class="form-control" id="username" name="username" 
+                                           value="{{ user.username }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="email" name="email" 
+                                           value="{{ user.email }}" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="new_password" class="form-label">New Password</label>
+                                    <input type="password" class="form-control" id="new_password" name="new_password"
+                                           placeholder="Leave blank to keep current password">
+                                </div>
+                                {% if current_user.id != user.id %}
+                                <div class="mb-3 form-check">
+                                    <input type="checkbox" class="form-check-input" id="is_admin" name="is_admin"
+                                           {% if user.is_admin %}checked{% endif %}>
+                                    <label class="form-check-label" for="is_admin">Admin Privileges</label>
+                                </div>
+                                {% endif %}
+                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                                <a href="{{ url_for('admin.users') }}" class="btn btn-outline-secondary">Cancel</a>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <!-- User Stats -->
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">User Statistics</h5>
+                            <ul class="list-unstyled">
+                                <li>Member since: {{ user.created_at.strftime('%Y-%m-%d') }}</li>
+                                <li>CTF Points: {{ user.points }}</li>
+                                <li>Challenges Solved: {{ user.solved_challenges|length }}</li>
+                                <li>Events Registered: {{ user.events|length if user.events else 0 }}</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity -->
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Recent Activity</h5>
+                            <div class="list-group list-group-flush">
+                                {% for solve in user.solved_challenges[-5:]|reverse %}
+                                <div class="list-group-item">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">Solved: {{ solve.challenge.title }}</h6>
+                                        <small>{{ solve.solved_at.strftime('%Y-%m-%d') }}</small>
+                                    </div>
+                                    <small class="text-muted">+{{ solve.challenge.points }} points</small>
+                                </div>
+                                {% else %}
+                                <div class="list-group-item">No recent activity</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+{% endblock %}

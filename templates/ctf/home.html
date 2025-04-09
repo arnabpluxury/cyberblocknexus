@@ -1,0 +1,427 @@
+{% extends "base.html" %}
+
+{% block title %}CTF Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Hacker terminal animation */
+    .terminal-container {
+        background-color: rgba(10, 25, 41, 0.7);
+        border-radius: 8px;
+        border: 1px solid var(--primary-color);
+        padding: 20px;
+        margin-top: 50px;
+        box-shadow: 0 0 20px rgba(0, 150, 255, 0.3);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .terminal-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+        border-bottom: 1px solid rgba(0, 150, 255, 0.3);
+        padding-bottom: 10px;
+    }
+    
+    .terminal-buttons {
+        display: flex;
+        margin-right: 15px;
+    }
+    
+    .terminal-button {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-right: 8px;
+    }
+    
+    .terminal-button.red { background-color: #ff5f56; }
+    .terminal-button.yellow { background-color: #ffbd2e; }
+    .terminal-button.green { background-color: #27c93f; }
+    
+    .terminal-title {
+        color: var(--text-secondary);
+        font-size: 14px;
+        flex-grow: 1;
+        text-align: center;
+        font-family: monospace;
+    }
+    
+    .terminal-content {
+        font-family: monospace;
+        color: var(--primary-color);
+        line-height: 1.5;
+    }
+    
+    .terminal-line {
+        margin: 0;
+        padding: 3px 0;
+        animation: fadeIn 0.5s ease-in-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .terminal-prompt {
+        color: var(--neon-green);
+    }
+    
+    .terminal-cursor {
+        display: inline-block;
+        width: 8px;
+        height: 15px;
+        background-color: var(--primary-color);
+        animation: blink 1s infinite;
+        vertical-align: middle;
+    }
+    
+    @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0; }
+    }
+    
+    /* Challenge cards animation */
+    .challenge-category {
+        position: relative;
+        overflow: hidden;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+    
+    .challenge-category::before {
+        content: '';
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        width: calc(100% + 4px);
+        height: calc(100% + 4px);
+        background: linear-gradient(45deg, 
+            var(--neon-blue), 
+            var(--primary-color), 
+            var(--neon-purple), 
+            var(--neon-blue));
+        z-index: -1;
+        animation: rotate-border 3s linear infinite;
+        background-size: 400%;
+    }
+    
+    @keyframes rotate-border {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+    
+    /* Data stream animation */
+    .data-stream {
+        position: absolute;
+        width: 2px;
+        background-color: var(--primary-color);
+        opacity: 0.5;
+        z-index: 0;
+        top: 0;
+        animation: data-flow 8s linear infinite;
+    }
+    
+    @keyframes data-flow {
+        0% { height: 0; top: 0; opacity: 0.7; }
+        100% { height: 100%; top: 0; opacity: 0; }
+    }
+    
+    /* Flag capture animation */
+    .flag-icon {
+        position: relative;
+        display: inline-block;
+    }
+    
+    .flag-icon::after {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        background: radial-gradient(circle, rgba(0, 255, 0, 0.4) 0%, rgba(0, 255, 0, 0) 70%);
+        border-radius: 50%;
+        opacity: 0;
+        transform: scale(0.5);
+        animation: flag-pulse 2s infinite;
+    }
+    
+    @keyframes flag-pulse {
+        0% { opacity: 0; transform: scale(0.5); }
+        50% { opacity: 1; transform: scale(1.2); }
+        100% { opacity: 0; transform: scale(0.5); }
+    }
+    
+    /* Enhanced hero section */
+    .hero-section {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%230096ff' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        opacity: 0.3;
+        z-index: -1;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="cyber-dots"></div>
+    <div class="cyber-dots"></div>
+    <div class="cyber-dots"></div>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-8 offset-md-2 text-center hero-content">
+                <h1 class="hero-title">CyberBlock<span class="text-primary">Nexus</span> CTF</h1>
+                <p class="hero-subtitle mx-auto">Test your skills, learn, and compete in our Capture The Flag challenges.</p>
+                {% if current_user.is_authenticated %}
+                <a href="{{ url_for('ctf_challenges') }}" class="btn btn-primary btn-lg mt-3 glow">View Challenges</a>
+                {% else %}
+                <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg mt-3 glow">Login to Start</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-lg-10 offset-lg-1">
+            <div class="terminal-container">
+                <div class="terminal-header">
+                    <div class="terminal-buttons">
+                        <div class="terminal-button red"></div>
+                        <div class="terminal-button yellow"></div>
+                        <div class="terminal-button green"></div>
+                    </div>
+                    <div class="terminal-title">Cyberblocknexus@ctf:~</div>
+                </div>
+                <div class="terminal-content" id="terminal-content">
+                    <!-- Initial prompt -->
+                    <div class="terminal-line">
+                        <span class="prompt">user@cyberblocknexus:~$</span> 
+                        <span class="command">start demo</span>
+                    </div>
+                    <div id="typing-output"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <div class="row mt-5">
+        <div class="col-12 text-center mb-4">
+            <h2 class="section-title">CTF Features</h2>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 challenge-category">
+                <!-- Add data streams for animation -->
+                <div class="data-stream" style="left: 20%; animation-delay: 0s;"></div>
+                <div class="data-stream" style="left: 65%; animation-delay: 3s;"></div>
+                <div class="card-body text-center">
+                    <div class="feature-icon"><i class="bi bi-shield"></i></div>
+                    <h5 class="feature-title">Beginner Friendly</h5>
+                    <p class="feature-text">Start with our beginner challenges to learn the basics of cybersecurity and CTF competitions.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 challenge-category">
+                <!-- Add data streams for animation -->
+                <div class="data-stream" style="left: 35%; animation-delay: 1s;"></div>
+                <div class="data-stream" style="left: 80%; animation-delay: 4s;"></div>
+                <div class="card-body text-center">
+                    <div class="feature-icon"><i class="bi bi-grid-3x3"></i></div>
+                    <h5 class="feature-title">Multiple Categories</h5>
+                    <p class="feature-text">Explore challenges in Web, Crypto, Forensics, Binary Exploitation, and more.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 challenge-category">
+                <!-- Add data streams for animation -->
+                <div class="data-stream" style="left: 50%; animation-delay: 2s;"></div>
+                <div class="data-stream" style="left: 15%; animation-delay: 5s;"></div>
+                <div class="card-body text-center">
+                    <div class="feature-icon flag-icon"><i class="bi bi-trophy"></i></div>
+                    <h5 class="feature-title">Real-time Leaderboard</h5>
+                    <p class="feature-text">Compete with others and track your progress on our live leaderboard.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-5 pt-4">
+        <div class="col-md-6 offset-md-3 text-center">
+            <h2 class="section-title">How It Works</h2>
+            <ol class="list-group list-group-numbered mt-4">
+                <li class="list-group-item bg-transparent text-light border-primary">Create an account or login</li>
+                <li class="list-group-item bg-transparent text-light border-primary">Browse available challenges</li>
+                <li class="list-group-item bg-transparent text-light border-primary">Solve challenges to find flags</li>
+                <li class="list-group-item bg-transparent text-light border-primary">Submit flags to earn points</li>
+                <li class="list-group-item bg-transparent text-light border-primary">Track your progress on the leaderboard</li>
+            </ol>
+            <div class="mt-5 mb-4">
+                <a href="{{ url_for('ctf_leaderboard') }}" class="btn btn-outline-primary me-2">View Leaderboard</a>
+                <a href="{{ url_for('ctf_challenges') }}" class="btn btn-primary">Start Hacking</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Terminal animation
+        const terminalContent = document.getElementById('terminal-content');
+        const commands = [
+            { prompt: 'Cyberblocknexus@ctf:~$ ', text: 'nmap -sS -sV -p- 10.10.10.123', delay: 50 },
+            { prompt: '', text: 'Starting Nmap 7.92 ( https://nmap.org ) at 2025-04-07 11:08 IST\nScanning 10.10.10.123 [65535 ports]\n...\nPort 22/tcp open  ssh     OpenSSH 8.2p1\nPort 80/tcp open  http    Apache httpd 2.4.41\nPort 443/tcp open  https   Apache httpd 2.4.41\nPort 8080/tcp open  http-proxy', delay: 20 },
+            { prompt: 'Cyberblocknexus@ctf:~$ ', text: 'dirb http://10.10.10.123', delay: 50 },
+            { prompt: '', text: 'DIRB v2.22\n-----------------\nDIRB http://10.10.10.123\n-----------------\nSTART_TIME: Mon Apr 7 11:09:15 2025\n...\nFOUND: /admin\nFOUND: /login\nFOUND: /images\nFOUND: /uploads\nFOUND: /backup', delay: 20 },
+            { prompt: 'Cyberblocknexus@ctf:~$ ', text: 'sqlmap -u "http://10.10.10.123/login.php" --forms --dump', delay: 50 },
+            { prompt: '', text: 'sqlmap identified the following injection point(s)\nParameter: username (POST)\n    Type: boolean-based blind\n    Title: AND boolean-based blind - WHERE or HAVING clause\n...\nDatabase: webapp\nTable: users\n[3 entries]\n+----+----------+----------------------------------+\n| id | username | password                         |\n+----+----------+----------------------------------+\n| 1  | admin    | 5f4dcc3b5aa765d61d8327deb882cf99 |\n| 2  | john     | 7c6a180b36896a0a8c02787eeafb0e4c |\n| 3  | guest    | 084e0343a0486ff05530df6c705c8bb4 |\n+----+----------+----------------------------------+', delay: 15 },
+            { prompt: 'Cyberblocknexus@ctf:~$ ', text: 'hashcat -m 0 "5f4dcc3b5aa765d61d8327deb882cf99" /usr/share/wordlists/rockyou.txt', delay: 50 },
+            { prompt: '', text: 'Initializing hashcat v6.2.5\n...\nRecovered: 1/1 (100.00%) Digests\n5f4dcc3b5aa765d61d8327deb882cf99:password123', delay: 20 },
+            { prompt: 'Cyberblocknexus@ctf:~$ ', text: 'ssh admin@10.10.10.123', delay: 50 },
+            { prompt: '', text: 'admin@10.10.10.123\'s password: ********\nLast login: Mon Apr 7 10:15:33 2025 from 10.10.14.2\nadmin@target:~$ ', delay: 30 },
+            { prompt: 'admin@target:~$ ', text: 'ls -la', delay: 50 },
+            { prompt: '', text: 'total 36\ndrwxr-xr-x 4 admin admin 4096 Apr 7 10:15 .\ndrwxr-xr-x 3 root  root  4096 Jan 15 2025 ..\n-rw------- 1 admin admin  220 Jan 15 2025 .bash_history\n-rw-r--r-- 1 admin admin 3771 Jan 15 2025 .bashrc\ndrwx------ 2 admin admin 4096 Jan 15 2025 .cache\n-rw-r--r-- 1 admin admin  807 Jan 15 2025 .profile\ndrwxr-xr-x 2 admin admin 4096 Apr 7 10:15 .ssh\n-rw-r--r-- 1 admin admin    0 Jan 15 2025 .sudo_as_admin_successful\n-rw-r--r-- 1 root  root   33 Jan 15 2025 flag.txt', delay: 20 },
+            { prompt: 'admin@target:~$ ', text: 'cat flag.txt', delay: 50 },
+            { prompt: '', text: 'HBN{C0ngr4ts_Y0u_F0und_Th3_Fl4g!}', delay: 100 },
+            { prompt: 'admin@target:~$ ', text: '', delay: 50 }
+        ];
+
+        let commandIndex = 0;
+        let charIndex = 0;
+        let currentCommand = commands[0];
+        let typingInterval;
+
+        function typeCommand() {
+            if (commandIndex >= commands.length) {
+                // Restart the animation after a delay
+                setTimeout(() => {
+                    terminalContent.innerHTML = '';
+                    commandIndex = 0;
+                    charIndex = 0;
+                    currentCommand = commands[0];
+                    typeCommand();
+                }, 5000);
+                return;
+            }
+
+            currentCommand = commands[commandIndex];
+
+            if (charIndex === 0) {
+                // Create a new line with prompt
+                const line = document.createElement('p');
+                line.className = 'terminal-line';
+                line.innerHTML = `<span class="terminal-prompt">${currentCommand.prompt}</span>`;
+                terminalContent.appendChild(line);
+
+                // Add cursor
+                const cursor = document.createElement('span');
+                cursor.className = 'terminal-cursor';
+                line.appendChild(cursor);
+            }
+
+            const currentLine = terminalContent.lastElementChild;
+            const promptSpan = currentLine.querySelector('.terminal-prompt');
+
+            if (charIndex < currentCommand.text.length) {
+                // Remove cursor
+                if (currentLine.querySelector('.terminal-cursor')) {
+                    currentLine.removeChild(currentLine.querySelector('.terminal-cursor'));
+                }
+
+                // Type character
+                promptSpan.insertAdjacentText('afterend', currentCommand.text.charAt(charIndex));
+
+                // Add cursor at the end
+                const cursor = document.createElement('span');
+                cursor.className = 'terminal-cursor';
+                currentLine.appendChild(cursor);
+
+                charIndex++;
+                setTimeout(typeCommand, currentCommand.delay);
+            } else {
+                // Command finished typing
+                // Remove cursor
+                if (currentLine.querySelector('.terminal-cursor')) {
+                    currentLine.removeChild(currentLine.querySelector('.terminal-cursor'));
+                }
+
+                // Move to next command
+                commandIndex++;
+                charIndex = 0;
+
+                // Add delay between commands
+                setTimeout(typeCommand, 1000);
+            }
+
+            // Scroll to bottom
+            terminalContent.scrollTop = terminalContent.scrollHeight;
+        }
+
+        // Start typing animation
+        setTimeout(typeCommand, 1000);
+
+        // Add random data streams to the page
+        function createDataStreams() {
+            const container = document.querySelector('.hero-section');
+            const numStreams = 15;
+
+            for (let i = 0; i < numStreams; i++) {
+                const stream = document.createElement('div');
+                stream.className = 'data-stream';
+                stream.style.left = `${Math.random() * 100}%`;
+                stream.style.animationDelay = `${Math.random() * 8}s`;
+                stream.style.height = `${Math.random() * 30 + 20}%`;
+                container.appendChild(stream);
+            }
+        }
+
+        createDataStreams();
+
+        // Add binary digits to the background
+        function createBinaryDigits() {
+            const binaryBackground = document.createElement('div');
+            binaryBackground.className = 'binary-background';
+            document.querySelector('.hero-section').appendChild(binaryBackground);
+
+            const numDigits = 50;
+            const digits = ['0', '1'];
+
+            for (let i = 0; i < numDigits; i++) {
+                const digit = document.createElement('div');
+                digit.className = 'binary-digit';
+                digit.textContent = digits[Math.floor(Math.random() * digits.length)];
+                digit.style.left = `${Math.random() * 100}%`;
+                digit.style.top = `${Math.random() * 100}%`;
+                digit.style.animationDelay = `${Math.random() * 3}s`;
+                digit.style.opacity = Math.random() * 0.5 + 0.1;
+                digit.style.fontSize = `${Math.random() * 1 + 0.8}rem`;
+                binaryBackground.appendChild(digit);
+            }
+        }
+
+        createBinaryDigits();
+    });
+</script>
+{% endblock %}

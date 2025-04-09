@@ -1,0 +1,182 @@
+{% extends 'admin/layout.html' %}
+
+{% block title %}{% if role %}Edit Role: {{ role.name }}{% else %}Create New Role{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">{% if role %}Edit Role: {{ role.name }}{% else %}Create New Role{% endif %}</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('roles.roles_list') }}">Roles</a></li>
+        <li class="breadcrumb-item active">{% if role %}Edit{% else %}Create{% endif %}</li>
+    </ol>
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-user-tag me-1"></i>
+            {% if role %}Edit Role{% else %}Create New Role{% endif %}
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{% if role %}{{ url_for('roles.edit_role', role_id=role.id) }}{% else %}{{ url_for('roles.new_role') }}{% endif %}">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="name" class="form-label">Role Name</label>
+                            <input type="text" class="form-control" id="name" name="name" value="{{ role.name if role else '' }}" 
+                                   {% if role and role.is_system %}readonly{% endif %} required>
+                            {% if role and role.is_system %}
+                            <small class="text-muted">System role names cannot be changed.</small>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="3" 
+                                      {% if role and role.is_system %}readonly{% endif %}>{{ role.description if role else '' }}</textarea>
+                            {% if role and role.is_system %}
+                            <small class="text-muted">System role descriptions cannot be changed.</small>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="display_order" class="form-label">Display Order</label>
+                            <input type="number" class="form-control" id="display_order" name="display_order" 
+                                   value="{{ role.display_order if role else 0 }}" min="0"
+                                   {% if role and role.is_system %}readonly{% endif %}>
+                        </div>
+                        
+                        {% if role and role.is_system %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> This is a system role. You can only modify its permissions.
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <h3 class="mt-4 mb-3">Permissions</h3>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card mb-3">
+                            <div class="card-header bg-light">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="selectAllPermissions">
+                                    <label class="form-check-label" for="selectAllPermissions">
+                                        <strong>Select All Permissions</strong>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion" id="permissionsAccordion">
+                            {% for category in categories %}
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="heading{{ category.name|replace(' ', '') }}">
+                                    <button class="accordion-button" type="button" data-bs-toggle="collapse" 
+                                            data-bs-target="#collapse{{ category.name|replace(' ', '') }}" 
+                                            aria-expanded="true" aria-controls="collapse{{ category.name|replace(' ', '') }}">
+                                        <div class="form-check">
+                                            <input class="form-check-input category-checkbox" type="checkbox" 
+                                                   id="category{{ category.id }}" data-category="{{ category.name|replace(' ', '') }}">
+                                            <label class="form-check-label" for="category{{ category.id }}">
+                                                <strong>{{ category.name }}</strong> - {{ category.description }}
+                                            </label>
+                                        </div>
+                                    </button>
+                                </h2>
+                                <div id="collapse{{ category.name|replace(' ', '') }}" class="accordion-collapse collapse show" 
+                                     aria-labelledby="heading{{ category.name|replace(' ', '') }}" data-bs-parent="#permissionsAccordion">
+                                    <div class="accordion-body">
+                                        <div class="row">
+                                            {% for permission in categorized_permissions[category.name] %}
+                                            <div class="col-md-6 mb-2">
+                                                <div class="form-check">
+                                                    <input class="form-check-input permission-checkbox" type="checkbox" 
+                                                           name="permissions" value="{{ permission.id }}" id="perm{{ permission.id }}"
+                                                           data-category="{{ category.name|replace(' ', '') }}"
+                                                           {% if role and permission in role.permissions %}checked{% endif %}>
+                                                    <label class="form-check-label" for="perm{{ permission.id }}">
+                                                        {{ permission.name }} 
+                                                        <small class="text-muted">- {{ permission.description }}</small>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> {% if role %}Update{% else %}Create{% endif %} Role
+                    </button>
+                    <a href="{{ url_for('roles.roles_list') }}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        // Select all permissions
+        $('#selectAllPermissions').change(function() {
+            $('.permission-checkbox').prop('checked', $(this).prop('checked'));
+            $('.category-checkbox').prop('checked', $(this).prop('checked'));
+        });
+        
+        // Category checkboxes
+        $('.category-checkbox').change(function() {
+            const category = $(this).data('category');
+            const isChecked = $(this).prop('checked');
+            
+            // Check/uncheck all permissions in this category
+            $(`.permission-checkbox[data-category="${category}"]`).prop('checked', isChecked);
+            
+            // Update "Select All" checkbox
+            updateSelectAllCheckbox();
+        });
+        
+        // Individual permission checkboxes
+        $('.permission-checkbox').change(function() {
+            const category = $(this).data('category');
+            
+            // Check if all permissions in this category are checked
+            const allChecked = $(`.permission-checkbox[data-category="${category}"]`).length === 
+                               $(`.permission-checkbox[data-category="${category}"]:checked`).length;
+            
+            // Update category checkbox
+            $(`#category${category}`).prop('checked', allChecked);
+            
+            // Update "Select All" checkbox
+            updateSelectAllCheckbox();
+        });
+        
+        // Update "Select All" checkbox based on individual permissions
+        function updateSelectAllCheckbox() {
+            const allChecked = $('.permission-checkbox').length === $('.permission-checkbox:checked').length;
+            $('#selectAllPermissions').prop('checked', allChecked);
+        }
+        
+        // Initialize category checkboxes
+        $('.category-checkbox').each(function() {
+            const category = $(this).data('category');
+            const totalPerms = $(`.permission-checkbox[data-category="${category}"]`).length;
+            const checkedPerms = $(`.permission-checkbox[data-category="${category}"]:checked`).length;
+            
+            $(this).prop('checked', totalPerms === checkedPerms && totalPerms > 0);
+        });
+        
+        // Initialize "Select All" checkbox
+        updateSelectAllCheckbox();
+    });
+</script>
+{% endblock %}

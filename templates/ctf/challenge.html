@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}{{ challenge.title }} - CTF Challenge{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('ctf_home') }}" class="text-primary">CTF Platform</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('ctf_challenges') }}" class="text-primary">Challenges</a></li>
+            <li class="breadcrumb-item active text-secondary">{{ challenge.title }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card challenge-card mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h1 class="card-title">{{ challenge.title }}</h1>
+                        <span class="badge bg-primary pulse">{{ challenge.points }} points</span>
+                    </div>
+                    <div class="mb-3">
+                        <span class="badge bg-secondary me-2">{{ challenge.category }}</span>
+                        <span class="badge bg-{{ challenge.difficulty|lower }}">{{ challenge.difficulty }}</span>
+                    </div>
+                    <p class="card-text text-secondary">{{ challenge.description }}</p>
+                    
+                    {% if challenge.files %}
+                    <div class="mt-4">
+                        <h5 class="text-primary">Challenge Files</h5>
+                        <ul class="list-group">
+                            {% for file in challenge.files %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent border-primary">
+                                <span class="text-light"><i class="bi bi-file-earmark me-2"></i>{{ file.name }}</span>
+                                <a href="{{ url_for('ctf.download_file', file_id=file.id) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-download"></i> Download
+                                </a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    {% if current_user.is_authenticated %}
+                    <div class="mt-4">
+                        <h5 class="text-primary">Submit Flag</h5>
+                        <form method="POST" action="{{ url_for('submit_flag', challenge_id=challenge.id) }}">
+                            <div class="input-group">
+                                <input type="text" class="form-control bg-transparent text-light border-primary" name="flag" placeholder="Enter flag here..." required>
+                                <button type="submit" class="btn btn-primary">Submit</button>
+                            </div>
+                        </form>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info mt-4 bg-transparent border-primary text-light">
+                        Please <a href="{{ url_for('login') }}" class="text-primary">login</a> to submit flags.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if challenge.hints %}
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h5 class="card-title text-primary">Hints</h5>
+                    <div class="accordion" id="hintsAccordion">
+                        {% for hint in challenge.hints %}
+                        <div class="accordion-item bg-transparent border border-primary mb-2">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed bg-transparent text-light" type="button" data-bs-toggle="collapse" 
+                                        data-bs-target="#hint{{ loop.index }}">
+                                    Hint {{ loop.index }} 
+                                    {% if not hint.unlocked %}
+                                    <span class="ms-2 badge bg-warning">Cost: {{ hint.cost }} points</span>
+                                    {% endif %}
+                                </button>
+                            </h2>
+                            <div id="hint{{ loop.index }}" class="accordion-collapse collapse">
+                                <div class="accordion-body text-light">
+                                    {% if hint.unlocked %}
+                                    {{ hint.content }}
+                                    {% else %}
+                                    <form method="POST" action="{{ url_for('unlock_hint', hint_id=hint.id) }}">
+                                        <button type="submit" class="btn btn-warning">
+                                            <i class="bi bi-unlock me-1"></i> Unlock Hint ({{ hint.cost }} points)
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title text-primary">Challenge Stats</h5>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent border-0">
+                            <span class="text-light"><i class="bi bi-check-circle-fill me-2 text-primary"></i>Solves</span>
+                            <span class="badge bg-primary rounded-pill">{{ challenge.solves|length }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent border-0">
+                            <span class="text-light"><i class="bi bi-trophy-fill me-2 text-primary"></i>First Blood</span>
+                            {% if challenge.first_blood %}
+                            <span class="text-light">{{ challenge.first_blood.username }}</span>
+                            {% else %}
+                            <span class="text-secondary">No solves yet</span>
+                            {% endif %}
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            {% if challenge.solves %}
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title text-primary">Recent Solves</h5>
+                    <div class="list-group list-group-flush">
+                        {% for solve in challenge.solves[-5:]|reverse %}
+                        <div class="list-group-item bg-transparent border-0 border-bottom border-primary py-3">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1 text-light"><i class="bi bi-person-fill me-2 text-primary"></i>{{ solve.user.username }}</h6>
+                                <small class="text-secondary">{{ solve.timestamp|timeago }}</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block title %}User Management - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <nav class="col-md-2 d-md-block bg-light sidebar">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('admin.users') }}">
+                            <i class="bi bi-people"></i> Users
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.events') }}">
+                            <i class="bi bi-calendar-event"></i> Events
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.ctf_challenges') }}">
+                            <i class="bi bi-flag"></i> CTF Challenges
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="col-md-10 ms-sm-auto px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1>User Management</h1>
+            </div>
+
+            <!-- Search and Filter -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <input type="text" class="form-control" id="userSearch" placeholder="Search users...">
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="roleFilter">
+                        <option value="all">All Roles</option>
+                        <option value="admin">Admins</option>
+                        <option value="user">Regular Users</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Users Table -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Joined</th>
+                                    <th>Points</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users %}
+                                <tr data-user-id="{{ user.id }}">
+                                    <td>{{ user.username }}</td>
+                                    <td>{{ user.email }}</td>
+                                    <td>
+                                        <span class="badge {% if user.is_admin %}bg-danger{% else %}bg-primary{% endif %}">
+                                            {{ 'Admin' if user.is_admin else 'User' }}
+                                        </span>
+                                    </td>
+                                    <td>{{ user.created_at.strftime('%Y-%m-%d') }}</td>
+                                    <td>{{ user.points }}</td>
+                                    <td>
+                                        <span class="badge bg-success">Active</span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <a href="{{ url_for('admin.edit_user', user_id=user.id) }}" 
+                                               class="btn btn-sm btn-outline-primary">
+                                                Edit
+                                            </a>
+                                            {% if user.id != current_user.id %}
+                                            <button class="btn btn-sm btn-outline-danger toggle-admin-btn"
+                                                    data-user-id="{{ user.id }}"
+                                                    {% if user.is_admin %}data-is-admin="true"{% endif %}>
+                                                {{ 'Remove Admin' if user.is_admin else 'Make Admin' }}
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Search functionality
+    const userSearch = document.getElementById('userSearch');
+    userSearch.addEventListener('input', filterUsers);
+
+    // Role filter
+    const roleFilter = document.getElementById('roleFilter');
+    roleFilter.addEventListener('change', filterUsers);
+
+    // Toggle admin status
+    document.querySelectorAll('.toggle-admin-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const userId = this.dataset.userId;
+            fetch(`/admin/api/user/${userId}/toggle-admin`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    location.reload();
+                } else {
+                    alert(data.error || 'Error updating admin status');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error updating admin status');
+            });
+        });
+    });
+
+    function filterUsers() {
+        const searchTerm = userSearch.value.toLowerCase();
+        const roleFilter = document.getElementById('roleFilter').value;
+        
+        document.querySelectorAll('tbody tr').forEach(row => {
+            const username = row.cells[0].textContent.toLowerCase();
+            const email = row.cells[1].textContent.toLowerCase();
+            const isAdmin = row.cells[2].textContent.trim() === 'Admin';
+            
+            const matchesSearch = username.includes(searchTerm) || email.includes(searchTerm);
+            const matchesRole = roleFilter === 'all' || 
+                              (roleFilter === 'admin' && isAdmin) || 
+                              (roleFilter === 'user' && !isAdmin);
+            
+            row.style.display = matchesSearch && matchesRole ? '' : 'none';
+        });
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}

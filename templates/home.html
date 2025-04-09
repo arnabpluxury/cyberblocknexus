@@ -1,0 +1,347 @@
+{% extends "base.html" %}
+
+{% block title %}CyberBlockNexus - Home{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Particle animation container */
+    #particles-js {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        z-index: 0;
+        pointer-events: none;
+    }
+    
+    /* Terminal typing effect */
+    .terminal-text {
+        border-right: 2px solid var(--neon-blue);
+        white-space: nowrap;
+        overflow: hidden;
+        margin: 0 auto;
+        letter-spacing: 0.15em;
+        animation: typing 3.5s steps(40, end), blink-caret 0.75s step-end infinite;
+    }
+    
+    @keyframes typing {
+        from { width: 0 }
+        to { width: 100% }
+    }
+    
+    @keyframes blink-caret {
+        from, to { border-color: transparent }
+        50% { border-color: var(--neon-blue) }
+    }
+    
+    /* Floating animation for cards */
+    .card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 30px rgba(0, 150, 255, 0.2);
+    }
+    
+    /* Glitch effect for hero image */
+    .glitch-wrapper {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .glitch-img {
+        position: relative;
+        z-index: 1;
+    }
+    
+    .glitch-img:hover {
+        animation: glitch 1s linear infinite;
+    }
+    
+    @keyframes glitch {
+        0% { transform: translate(0) }
+        20% { transform: translate(-5px, 5px) }
+        40% { transform: translate(-5px, -5px) }
+        60% { transform: translate(5px, 5px) }
+        80% { transform: translate(5px, -5px) }
+        100% { transform: translate(0) }
+    }
+    
+    /* Enhance hero section */
+    .hero-section {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .hero-content {
+        position: relative;
+        z-index: 2;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Particles.js Container -->
+<div id="particles-js"></div>
+
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="cyber-dots"></div>
+    <div class="cyber-dots"></div>
+    <div class="cyber-dots"></div>
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-6 hero-content">
+                <h1 class="hero-title terminal-text">Welcome to <span class="text-primary">CyberBlockNexus</span></h1>
+                <p class="hero-subtitle">Your gateway to cybersecurity excellence. Join our community of passionate hackers</p>
+                <div class="mt-4">
+                    {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('ctf_home') }}" class="btn btn-primary me-2">Start Hacking</a>
+                        <a href="{{ url_for('events') }}" class="btn btn-outline-primary">View Events</a>
+                    {% else %}
+                        <a href="{{ url_for('register') }}" class="btn btn-primary me-2">Join Now</a>
+                        <a href="{{ url_for('about') }}" class="btn btn-outline-primary">Learn More</a>
+                    {% endif %}
+                </div>
+            </div>
+            <!--<div class="col-md-6 glitch-wrapper">
+                <img src="{{ url_for('static', filename='img/hero-image.png') }}" alt="Cybersecurity" class="img-fluid float glitch-img">
+                <div class="cyber-grid"></div>-->
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container mt-5">
+    <div class="row mb-5">
+        <div class="col-12 text-center">
+            <h2 class="section-title">Unlock Your <span class="text-primary">Cyber Potential</span></h2>
+            <p class="lead">Join our community of hackers, security researchers, and cybersecurity enthusiasts</p>
+            <div class="cyber-line mt-3 mb-4"></div>
+        </div>
+    </div>
+
+
+    <div class="row mt-5">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <div class="feature-icon"><i class="bi bi-book-half"></i></div>
+                    <h3 class="feature-title">Learn</h3>
+                    <p class="feature-text">Access comprehensive learning resources and hands-on labs to develop your cybersecurity skills.</p>
+                    <a href="{{ url_for('resources') }}" class="btn btn-outline-primary">View Resources</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <div class="feature-icon"><i class="bi bi-code-slash"></i></div>
+                    <h3 class="feature-title">Practice</h3>
+                    <p class="feature-text">Challenge yourself with our CTF platform featuring real-world scenarios and challenges.</p>
+                    <a href="{{ url_for('ctf_home') }}" class="btn btn-outline-primary">Try CTF</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <div class="feature-icon"><i class="bi bi-people"></i></div>
+                    <h3 class="feature-title">Connect</h3>
+                    <p class="feature-text">Join our community events, workshops, and connect with fellow security enthusiasts.</p>
+                    <a href="{{ url_for('events') }}" class="btn btn-outline-primary">View Events</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-5 pt-5">
+        <div class="col-12 text-center">
+            <h2 class="section-title">Why Choose CyberBlockNexus?</h2>
+            <p class="lead mb-5">We offer a comprehensive platform for cybersecurity enthusiasts</p>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-3 mb-4">
+            <div class="text-center">
+                <i class="bi bi-shield-check display-4 text-primary pulse"></i>
+                <h4 class="mt-3">Practical Learning</h4>
+                <p class="text-secondary">Hands-on experience with real-world scenarios</p>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="text-center">
+                <i class="bi bi-people display-4 text-primary"></i>
+                <h4 class="mt-3">Community</h4>
+                <p class="text-secondary">Connect with like-minded security enthusiasts</p>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="text-center">
+                <i class="bi bi-trophy display-4 text-primary"></i>
+                <h4 class="mt-3">Competitions</h4>
+                <p class="text-secondary">Regular CTF events and challenges</p>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="text-center">
+                <i class="bi bi-book display-4 text-primary"></i>
+                <h4 class="mt-3">Resources</h4>
+                <p class="text-secondary">Curated learning materials and guides</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-5 pt-3 pb-5">
+        <div class="col-12 text-center">
+            <h3>Ready to start your cybersecurity journey?</h3>
+            <div class="mt-4">
+                <a href="{{ url_for('register') }}" class="btn btn-primary">Join Our Community</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Particles.js Library -->
+<script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+<script>
+    // Configure Particles.js
+    document.addEventListener('DOMContentLoaded', function() {
+        particlesJS("particles-js", {
+            "particles": {
+                "number": {
+                    "value": 80,
+                    "density": {
+                        "enable": true,
+                        "value_area": 800
+                    }
+                },
+                "color": {
+                    "value": "#0096ff"
+                },
+                "shape": {
+                    "type": ["circle", "triangle", "edge", "polygon"],
+                    "stroke": {
+                        "width": 0,
+                        "color": "#000000"
+                    },
+                    "polygon": {
+                        "nb_sides": 5
+                    }
+                },
+                "opacity": {
+                    "value": 0.5,
+                    "random": true,
+                    "anim": {
+                        "enable": true,
+                        "speed": 1,
+                        "opacity_min": 0.1,
+                        "sync": false
+                    }
+                },
+                "size": {
+                    "value": 3,
+                    "random": true,
+                    "anim": {
+                        "enable": false,
+                        "speed": 40,
+                        "size_min": 0.1,
+                        "sync": false
+                    }
+                },
+                "line_linked": {
+                    "enable": true,
+                    "distance": 150,
+                    "color": "#0096ff",
+                    "opacity": 0.4,
+                    "width": 1
+                },
+                "move": {
+                    "enable": true,
+                    "speed": 2,
+                    "direction": "none",
+                    "random": true,
+                    "straight": false,
+                    "out_mode": "out",
+                    "bounce": false,
+                    "attract": {
+                        "enable": false,
+                        "rotateX": 600,
+                        "rotateY": 1200
+                    }
+                }
+            },
+            "interactivity": {
+                "detect_on": "canvas",
+                "events": {
+                    "onhover": {
+                        "enable": true,
+                        "mode": "grab"
+                    },
+                    "onclick": {
+                        "enable": true,
+                        "mode": "push"
+                    },
+                    "resize": true
+                },
+                "modes": {
+                    "grab": {
+                        "distance": 140,
+                        "line_linked": {
+                            "opacity": 1
+                        }
+                    },
+                    "bubble": {
+                        "distance": 400,
+                        "size": 40,
+                        "duration": 2,
+                        "opacity": 8,
+                        "speed": 3
+                    },
+                    "repulse": {
+                        "distance": 200,
+                        "duration": 0.4
+                    },
+                    "push": {
+                        "particles_nb": 4
+                    },
+                    "remove": {
+                        "particles_nb": 2
+                    }
+                }
+            },
+            "retina_detect": true
+        });
+    });
+    
+    // Add data breach counter animation
+    document.addEventListener('DOMContentLoaded', function() {
+        const cards = document.querySelectorAll('.card');
+        
+        // Add entrance animations with delay
+        cards.forEach((card, index) => {
+            setTimeout(() => {
+                card.classList.add('animate__animated', 'animate__fadeInUp');
+            }, 300 * index);
+        });
+        
+        // Add cyber grid animation
+        const cyberGrid = document.querySelector('.cyber-grid');
+        if (cyberGrid) {
+            for (let i = 0; i < 50; i++) {
+                const dot = document.createElement('div');
+                dot.classList.add('grid-dot');
+                dot.style.top = Math.random() * 100 + '%';
+                dot.style.left = Math.random() * 100 + '%';
+                dot.style.animationDelay = Math.random() * 5 + 's';
+                cyberGrid.appendChild(dot);
+            }
+        }
+    });
+</script>
+{% endblock %}

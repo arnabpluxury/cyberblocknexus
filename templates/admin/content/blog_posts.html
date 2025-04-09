@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+
+{% block title %}Blog Posts - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <nav class="col-md-2 d-md-block bg-light sidebar">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('content.blog_posts') }}">
+                            <i class="bi bi-file-text"></i> Blog Posts
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('content.resources') }}">
+                            <i class="bi bi-folder"></i> Resources
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('content.announcements') }}">
+                            <i class="bi bi-megaphone"></i> Announcements
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('content.pages') }}">
+                            <i class="bi bi-file-earmark"></i> Pages
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main content -->
+        <main class="col-md-10 ms-sm-auto px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1>Blog Posts</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <a href="{{ url_for('content.new_post') }}" class="btn btn-primary">
+                        <i class="bi bi-plus"></i> New Post
+                    </a>
+                </div>
+            </div>
+
+            <!-- Filters and Search -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <select class="form-select" id="statusFilter">
+                        <option value="all">All Status</option>
+                        <option value="published">Published</option>
+                        <option value="draft">Draft</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="tagFilter">
+                        <option value="all">All Tags</option>
+                        {% for tag in tags %}
+                        <option value="{{ tag }}">{{ tag }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="searchInput" placeholder="Search posts...">
+                        <button class="btn btn-outline-secondary" type="button">Search</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Posts Table -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Author</th>
+                                    <th>Tags</th>
+                                    <th>Created</th>
+                                    <th>Status</th>
+                                    <th>Featured</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for post in posts %}
+                                <tr>
+                                    <td>
+                                        <a href="{{ url_for('content.edit_post', post_id=post.id) }}">{{ post.title }}</a>
+                                        {% if post.featured %}
+                                        <span class="badge bg-warning">Featured</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ post.author.username }}</td>
+                                    <td>
+                                        {% if post.tags %}
+                                        {% for tag in post.tags.split(',') %}
+                                        <span class="badge bg-secondary">{{ tag.strip() }}</span>
+                                        {% endfor %}
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ post.created_at.strftime('%Y-%m-%d') }}</td>
+                                    <td>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input toggle-publish" type="checkbox"
+                                                   data-post-id="{{ post.id }}"
+                                                   {% if post.published %}checked{% endif %}>
+                                            <label class="form-check-label">
+                                                {{ 'Published' if post.published else 'Draft' }}
+                                            </label>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input toggle-featured" type="checkbox"
+                                                   data-post-id="{{ post.id }}"
+                                                   {% if post.featured %}checked{% endif %}>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <a href="{{ url_for('content.edit_post', post_id=post.id) }}"
+                                               class="btn btn-sm btn-outline-primary">
+                                                Edit
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#deleteModal{{ post.id }}">
+                                                Delete
+                                            </button>
+                                            <a href="{{ url_for('blog.post', slug=post.slug) }}"
+                                               class="btn btn-sm btn-outline-secondary"
+                                               target="_blank">
+                                                View
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <!-- Delete Modal -->
+                                <div class="modal fade" id="deleteModal{{ post.id }}" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Delete Post</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p>Are you sure you want to delete "{{ post.title }}"?</p>
+                                                <p class="text-danger">This action cannot be undone.</p>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                <form action="{{ url_for('content.delete_post', post_id=post.id) }}" method="POST">
+                                                    <button type="submit" class="btn btn-danger">Delete</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Post status toggle
+    document.querySelectorAll('.toggle-publish').forEach(toggle => {
+        toggle.addEventListener('change', function() {
+            const postId = this.dataset.postId;
+            fetch(`/admin/api/post/${postId}/toggle-publish`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status !== 'success') {
+                    this.checked = !this.checked;
+                    alert('Error updating post status');
+                } else {
+                    this.nextElementSibling.textContent = data.published ? 'Published' : 'Draft';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                this.checked = !this.checked;
+                alert('Error updating post status');
+            });
+        });
+    });
+
+    // Filters
+    const statusFilter = document.getElementById('statusFilter');
+    const tagFilter = document.getElementById('tagFilter');
+    const searchInput = document.getElementById('searchInput');
+
+    function filterPosts() {
+        const status = statusFilter.value;
+        const tag = tagFilter.value;
+        const search = searchInput.value.toLowerCase();
+
+        document.querySelectorAll('tbody tr').forEach(row => {
+            const isPublished = row.querySelector('.toggle-publish').checked;
+            const tags = Array.from(row.querySelectorAll('td:nth-child(3) .badge'))
+                .map(badge => badge.textContent.toLowerCase());
+            const title = row.querySelector('td:first-child a').textContent.toLowerCase();
+
+            const matchesStatus = status === 'all' || 
+                                (status === 'published' && isPublished) || 
+                                (status === 'draft' && !isPublished);
+            const matchesTag = tag === 'all' || tags.includes(tag.toLowerCase());
+            const matchesSearch = title.includes(search);
+
+            row.style.display = matchesStatus && matchesTag && matchesSearch ? '' : 'none';
+        });
+    }
+
+    statusFilter.addEventListener('change', filterPosts);
+    tagFilter.addEventListener('change', filterPosts);
+    searchInput.addEventListener('input', filterPosts);
+});
+</script>
+{% endblock %}
+{% endblock %}

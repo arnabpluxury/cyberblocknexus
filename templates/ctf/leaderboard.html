@@ -1,0 +1,301 @@
+{% extends "base.html" %}
+
+{% block title %}CTF Leaderboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Leaderboard animations */
+    .leaderboard-card {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid var(--primary-color);
+        box-shadow: 0 0 15px rgba(0, 150, 255, 0.2);
+        background-color: rgba(10, 25, 41, 0.7);
+        transition: all 0.3s ease;
+    }
+    
+    .leaderboard-card:hover {
+        box-shadow: 0 0 25px rgba(0, 150, 255, 0.4);
+        transform: translateY(-5px);
+    }
+    
+    /* Circuit board background */
+    .circuit-background {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: 
+            linear-gradient(rgba(0, 150, 255, 0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0, 150, 255, 0.03) 1px, transparent 1px);
+        background-size: 20px 20px;
+        opacity: 0.5;
+        z-index: 0;
+        pointer-events: none;
+    }
+    
+    /* Rank badge glow effect */
+    .rank-badge {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .rank-badge::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: conic-gradient(
+            transparent, 
+            rgba(255, 255, 255, 0.3), 
+            transparent, 
+            transparent
+        );
+        animation: rotate-badge 3s linear infinite;
+    }
+    
+    @keyframes rotate-badge {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    
+    /* Highlight current user */
+    .current-user-row {
+        position: relative;
+        animation: pulse-highlight 2s infinite;
+    }
+    
+    @keyframes pulse-highlight {
+        0% { background-color: rgba(0, 150, 255, 0.1); }
+        50% { background-color: rgba(0, 150, 255, 0.2); }
+        100% { background-color: rgba(0, 150, 255, 0.1); }
+    }
+    
+    /* Score counter animation */
+    .score-counter {
+        display: inline-block;
+        font-family: 'Orbitron', sans-serif;
+        color: var(--primary-color);
+        text-shadow: 0 0 5px var(--primary-color);
+    }
+    
+    /* Data flow lines */
+    .data-flow {
+        position: absolute;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
+        animation: data-pulse 3s infinite;
+        opacity: 0.6;
+        z-index: 0;
+    }
+    
+    @keyframes data-pulse {
+        0% { opacity: 0; width: 0; }
+        50% { opacity: 0.6; width: 100%; }
+        100% { opacity: 0; width: 0; }
+    }
+    
+    /* Enhanced hero section */
+    .hero-section {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%230096ff' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        opacity: 0.3;
+        z-index: -1;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section py-4">
+    <div class="cyber-dots"></div>
+    <div class="cyber-dots"></div>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12 text-center hero-content">
+                <h1 class="hero-title">CTF <span class="text-primary">Leaderboard</span></h1>
+                <p class="hero-subtitle mx-auto">See who's leading the competition and where you stand</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container mt-5">
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card leaderboard-card">
+                <div class="circuit-background"></div>
+                <!-- Add data flow lines -->
+                <div class="data-flow" style="top: 20%; left: 0;"></div>
+                <div class="data-flow" style="top: 40%; left: 0;"></div>
+                <div class="data-flow" style="top: 60%; left: 0;"></div>
+                <div class="data-flow" style="top: 80%; left: 0;"></div>
+                <div class="card-body">
+                    <h5 class="card-title text-primary">Top Players</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="border-bottom border-primary">
+                                <tr class="text-secondary">
+                                    <th><i class="bi bi-hash me-1"></i>Rank</th>
+                                    <th><i class="bi bi-person me-1"></i>Player</th>
+                                    <th><i class="bi bi-star me-1"></i>Points</th>
+                                    <th><i class="bi bi-check-circle me-1"></i>Challenges Solved</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users %}
+                                <tr class="{% if current_user.is_authenticated and current_user.username == user.username %}current-user-row{% endif %}">
+                                    <td class="text-light">
+                                        {% if loop.index == 1 %}
+                                            <span class="badge bg-warning rank-badge"><i class="bi bi-trophy-fill me-1"></i>{{ loop.index }}</span>
+                                        {% elif loop.index == 2 %}
+                                            <span class="badge bg-secondary rank-badge"><i class="bi bi-trophy-fill me-1"></i>{{ loop.index }}</span>
+                                        {% elif loop.index == 3 %}
+                                            <span class="badge bg-danger rank-badge"><i class="bi bi-trophy-fill me-1"></i>{{ loop.index }}</span>
+                                        {% else %}
+                                            <span class="rank-number">{{ loop.index }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-light">{{ user.username }}</td>
+                                    <td class="text-light"><span class="score-counter" data-score="{{ user.points }}">0</span></td>
+                                    <td class="text-light"><span class="score-counter" data-challenges="{{ user.solved_challenges|length }}">0</span></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card mb-4 leaderboard-card">
+                <div class="circuit-background"></div>
+                <!-- Add data flow lines -->
+                <div class="data-flow" style="top: 30%; left: 0;"></div>
+                <div class="data-flow" style="top: 70%; left: 0;"></div>
+                <div class="card-body">
+                    <h5 class="card-title text-primary">Your Stats</h5>
+                    {% if current_user.is_authenticated %}
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent border-0 pb-3">
+                            <span class="text-light"><i class="bi bi-star-fill me-2 text-primary"></i>Points</span>
+                            <span class="badge bg-primary rounded-pill">{{ current_user.points }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent border-0 pb-3">
+                            <span class="text-light"><i class="bi bi-trophy-fill me-2 text-primary"></i>Rank</span>
+                            <span class="badge bg-primary rounded-pill">{% set rank = users.index(current_user) + 1 if current_user in users else 'N/A' %} {{ rank }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent border-0 pb-3">
+                            <span class="text-light"><i class="bi bi-check-circle-fill me-2 text-primary"></i>Challenges Solved</span>
+                            <span class="badge bg-primary rounded-pill">{{ current_user.solved_challenges|length }}</span>
+                        </li>
+                    </ul>
+                    <div class="mt-4">
+                        <a href="{{ url_for('ctf_challenges') }}" class="btn btn-primary w-100"><i class="bi bi-code-slash me-2"></i>Solve More Challenges</a>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-lock-fill text-primary display-1 mb-3"></i>
+                        <p class="text-light mb-4">Login to track your progress on the leaderboard!</p>
+                        <a href="{{ url_for('login') }}" class="btn btn-primary"><i class="bi bi-box-arrow-in-right me-2"></i>Login Now</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title text-primary">Quick Links</h5>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('ctf_home') }}" class="btn btn-outline-primary"><i class="bi bi-house-door me-2"></i>CTF Home</a>
+                        <a href="{{ url_for('ctf_challenges') }}" class="btn btn-outline-primary"><i class="bi bi-puzzle me-2"></i>Challenges</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Animate score counters
+        const scoreCounters = document.querySelectorAll('.score-counter');
+        
+        scoreCounters.forEach(counter => {
+            const targetScore = counter.getAttribute('data-score');
+            const targetChallenges = counter.getAttribute('data-challenges');
+            const target = targetScore || targetChallenges;
+            
+            if (target) {
+                const duration = 1500; // Animation duration in milliseconds
+                const frameDuration = 1000 / 60; // 60fps
+                const totalFrames = Math.round(duration / frameDuration);
+                let frame = 0;
+                
+                // Start the animation after a slight delay based on position
+                const delay = Math.random() * 500;
+                
+                setTimeout(() => {
+                    const timer = setInterval(() => {
+                        frame++;
+                        // Use easeOutQuad for smoother animation
+                        const progress = frame / totalFrames;
+                        const easeProgress = 1 - (1 - progress) * (1 - progress);
+                        const currentCount = Math.floor(easeProgress * target);
+                        
+                        counter.textContent = currentCount;
+                        
+                        if (frame === totalFrames) {
+                            clearInterval(timer);
+                            counter.textContent = target; // Ensure final value is exact
+                        }
+                    }, frameDuration);
+                }, delay);
+            }
+        });
+        
+        // Add random data streams to the page
+        function createDataStreams() {
+            const container = document.querySelector('.hero-section');
+            const numStreams = 10;
+
+            for (let i = 0; i < numStreams; i++) {
+                const stream = document.createElement('div');
+                stream.className = 'data-stream';
+                stream.style.left = `${Math.random() * 100}%`;
+                stream.style.top = `${Math.random() * 100}%`;
+                stream.style.animationDelay = `${Math.random() * 5}s`;
+                stream.style.height = `${Math.random() * 2 + 1}px`;
+                stream.style.width = `${Math.random() * 30 + 20}%`;
+                container.appendChild(stream);
+            }
+        }
+
+        createDataStreams();
+        
+        // Add glowing effect to rank badges
+        const rankBadges = document.querySelectorAll('.rank-badge');
+        rankBadges.forEach(badge => {
+            // Add subtle pulse animation
+            badge.style.animation = `pulse-highlight ${2 + Math.random()}s infinite`;
+        });
+    });
+</script>
+{% endblock %}

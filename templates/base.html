@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% endblock %} | CyberBlockNexus</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!--Tab bar Icon-->
+    <link rel="Icon" href="../static/img/logo.png">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    {% block extra_css %}{% endblock %}
+    
+    <style>
+        /* Matrix Rain Animation */
+        #matrix-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.1;
+            pointer-events: none;
+        }
+        
+        /* Cursor Animation */
+        .custom-cursor {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: transparent;
+            border: 2px solid var(--primary-color);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 9999;
+            transition: width 0.3s, height 0.3s, border-color 0.3s;
+            mix-blend-mode: difference;
+        }
+        
+        .cursor-dot {
+            position: fixed;
+            width: 5px;
+            height: 5px;
+            background-color: var(--primary-color);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 9999;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+        
+        /* Hover effect for interactive elements */
+        .nav-link, .btn, a, .card {
+            cursor: none;
+        }
+    </style>
+</head>
+<body class="dark-theme">
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-content">
+            <div class="loading-text">LOADING</div>
+            <div class="progress-bar">
+                <div class="progress-fill"></div>
+            </div>
+            <div class="loading-message">Initializing secure connection...</div>
+        </div>
+        <canvas id="loading-matrix-canvas"></canvas>
+    </div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('home') }}">
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="CyberBlockNexus" height="100" class="me-2">
+                <span class="logo-text">CYBERBLOCKNEXUS</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mx-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('home') }}">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('about') }}">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('events') }}">Events</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('resources') }}">Resources</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('ctf_home') }}">Blog</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    {% if current_user.is_authenticated %}
+                        {% if current_user.is_admin %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin_auth.login') }}">
+                                <i class="bi bi-shield-lock"></i> Admin Panel
+                            </a>
+                        </li>
+                        {% endif %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" 
+                               data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-person-circle"></i> {{ current_user.username }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end dark-dropdown">
+                                <li><a class="dropdown-item" href="{{ url_for('profile') }}">Profile</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('settings') }}">Settings</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item me-2">
+                            <a class="nav-link btn btn-outline-primary" href="{{ url_for('login') }}">Login <i class="bi bi-box-arrow-in-right"></i></a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link btn btn-primary" href="{{ url_for('register') }}">Register <i class="bi bi-person-plus"></i></a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer mt-5 py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <h5 class="footer-heading">CyberBlockNexus</h5>
+                    <p>Empowering the next generation of cybersecurity professionals.</p>
+                </div>
+                <div class="col-md-4">
+                    <h5 class="footer-heading">Quick Links</h5>
+                    <ul class="list-unstyled footer-links">
+                        <li><a href="{{ url_for('about') }}">About Us</a></li>
+                        <li><a href="{{ url_for('contact') }}">Contact</a></li>
+                        <li><a href="{{ url_for('privacy') }}">Privacy Policy</a></li>
+                        <li><a href="{{ url_for('terms') }}">Terms of Service</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h5 class="footer-heading">Connect With Us</h5>
+                    <div class="social-links">
+                        <a href="https://chat.whatsapp.com/CRWUyV1Kua7AUeAwnABNuF" class="me-3"><i class="bi bi-whatsapp"></i></a>
+                        <a href="https://www.instagram.com/official_cyberblock_nexus?utm_source=qr&igsh=MTliOHJvamtra3FhNA==" class="me-3"><i class="bi bi-instagram"></i></a>
+                        <a href="https://www.linkedin.com/company/cyberblock-nexus/ "><i class="bi bi-linkedin"></i></a>
+                    </div>
+                </div>
+            </div>
+            <hr class="mt-4 footer-divider">
+            <div class="text-center">
+                <small>&copy; {{ now.year }} CyberBlockNexus. All rights reserved.</small>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JavaScript -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+    
+    <!-- Matrix Rain Animation Canvas -->
+    <canvas id="matrix-canvas"></canvas>
+    
+    <!-- Custom Cursor Elements -->
+    <div class="custom-cursor"></div>
+    <div class="cursor-dot"></div>
+    
+    <!-- Matrix Rain Animation Script -->
+    <script>
+        // Matrix Rain Animation
+        const canvas = document.getElementById('matrix-canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Set canvas dimensions to window size
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        // Characters to display (can be customized)
+        const chars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン';
+        const fontSize = 14;
+        const columns = Math.floor(canvas.width / fontSize);
+        
+        // Array to track the y position of each column
+        const drops = [];
+        for (let i = 0; i < columns; i++) {
+            drops[i] = Math.random() * -100;
+        }
+        
+        // Drawing function
+        function draw() {
+            // Semi-transparent black background to create trail effect
+            ctx.fillStyle = 'rgba(10, 25, 41, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Set text color and font
+            ctx.fillStyle = '#0096ff';
+            ctx.font = fontSize + 'px monospace';
+            
+            // Loop through each column
+            for (let i = 0; i < drops.length; i++) {
+                // Random character
+                const text = chars[Math.floor(Math.random() * chars.length)];
+                
+                // Draw the character
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                
+                // Reset drop position or move it down
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+        }
+        
+        // Animation loop
+        setInterval(draw, 35);
+        
+        // Resize canvas when window is resized
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+    </script>
+    
+    <!-- Loading Screen Script -->
+    <script>
+        // Loading screen matrix animation
+        const loadingCanvas = document.getElementById('loading-matrix-canvas');
+        const loadingCtx = loadingCanvas.getContext('2d');
+        const loadingScreen = document.getElementById('loading-screen');
+        const progressFill = document.querySelector('.progress-fill');
+        const loadingMessage = document.querySelector('.loading-message');
+        
+        // Set canvas dimensions
+        loadingCanvas.width = window.innerWidth;
+        loadingCanvas.height = window.innerHeight;
+        
+        // Characters for the matrix rain (mix of letters, numbers, and symbols)
+        const loadingMatrixChars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン>$#@%&*!?+-=/\\[]{}|;:,.()<>';
+        const loadingFontSize = 16;
+        const loadingColumns = Math.floor(loadingCanvas.width / loadingFontSize);
+        
+        // Array to track the y position of each column
+        const loadingDrops = [];
+        for (let i = 0; i < loadingColumns; i++) {
+            loadingDrops[i] = Math.random() * -100;
+        }
+        
+        // Drawing function for loading matrix
+        function drawLoadingMatrix() {
+            // Semi-transparent black background to create trail effect
+            loadingCtx.fillStyle = 'rgba(10, 25, 41, 0.05)';
+            loadingCtx.fillRect(0, 0, loadingCanvas.width, loadingCanvas.height);
+            
+            // Set text color and font
+            loadingCtx.fillStyle = '#0096ff';
+            loadingCtx.font = loadingFontSize + 'px monospace';
+            
+            // Loop through each column
+            for (let i = 0; i < loadingDrops.length; i++) {
+                // Random character
+                const text = loadingMatrixChars[Math.floor(Math.random() * loadingMatrixChars.length)];
+                
+                // Draw the character
+                loadingCtx.fillText(text, i * loadingFontSize, loadingDrops[i] * loadingFontSize);
+                
+                // Reset drop position or move it down
+                if (loadingDrops[i] * loadingFontSize > loadingCanvas.height && Math.random() > 0.975) {
+                    loadingDrops[i] = 0;
+                }
+                loadingDrops[i]++;
+            }
+        }
+        
+        // Loading messages to display randomly
+        const loadingMessages = [
+            "Initializing secure connection...",
+            "Bypassing security protocols...",
+            "Decrypting network traffic...",
+            "Accessing encrypted database...",
+            "Compiling exploit code...",
+            "Scanning for vulnerabilities...",
+            "Establishing secure tunnel...",
+            "Deploying countermeasures...",
+            "Analyzing system architecture...",
+            "Injecting payload...",
+            "Brute forcing credentials...",
+            "Executing zero-day exploit...",
+            "Deploying rootkit...",
+            "Intercepting packets...",
+            "Cracking encryption keys...",
+            "Bypassing firewall...",
+            "Escalating privileges...",
+            "Obfuscating trace route...",
+            "Disabling security systems...",
+            "Compromising target system...",
+            "Extracting sensitive data...",
+            "Establishing backdoor access...",
+            "Hijacking session tokens...",
+            "Executing SQL injection...",
+            "Deploying polymorphic code...",
+            "Analyzing memory dump...",
+            "Reverse engineering binaries...",
+            "Launching DDoS attack...",
+            "Exploiting buffer overflow..."
+        ];
+        
+        // Function to show loading screen with enhanced animations
+        function showLoadingScreen(duration = 2500) {
+            // Reset and show loading screen
+            loadingScreen.classList.add('active');
+            progressFill.style.width = '0%';
+            
+            // Add glitch effect to loading text
+            const loadingText = document.querySelector('.loading-text');
+            loadingText.classList.add('glitch-text');
+            
+            // Generate random binary digits in background
+            const binaryContainer = document.createElement('div');
+            binaryContainer.className = 'binary-background';
+            loadingScreen.appendChild(binaryContainer);
+            
+            for (let i = 0; i < 50; i++) {
+                const binaryDigit = document.createElement('div');
+                binaryDigit.className = 'binary-digit';
+                binaryDigit.textContent = Math.random() > 0.5 ? '1' : '0';
+                binaryDigit.style.left = Math.random() * 100 + '%';
+                binaryDigit.style.top = Math.random() * 100 + '%';
+                binaryDigit.style.animationDelay = Math.random() * 2 + 's';
+                binaryDigit.style.animationDuration = (Math.random() * 3 + 1) + 's';
+                binaryContainer.appendChild(binaryDigit);
+            }
+            
+            // Start the loading animation with adjusted timing based on duration
+            let progress = 0;
+            const progressStep = 100 / (duration / 100); // Adjust step size based on duration
+            const loadingInterval = setInterval(() => {
+                progress += progressStep * (0.5 + Math.random());
+                if (progress > 100) progress = 100;
+                
+                progressFill.style.width = progress + '%';
+                
+                // Update loading message more frequently
+                if (Math.random() > 0.9) {
+                    const randomMessage = loadingMessages[Math.floor(Math.random() * loadingMessages.length)];
+                    loadingMessage.textContent = randomMessage;
+                    
+                    // Add typing animation effect
+                    loadingMessage.classList.remove('typing-animation');
+                    void loadingMessage.offsetWidth; // Trigger reflow
+                    loadingMessage.classList.add('typing-animation');
+                }
+                
+                if (progress >= 100) {
+                    clearInterval(loadingInterval);
+                    // Hide loading screen after a short delay
+                    setTimeout(() => {
+                        loadingScreen.classList.remove('active');
+                        // Clean up binary digits
+                        if (binaryContainer) {
+                            binaryContainer.remove();
+                        }
+                        loadingText.classList.remove('glitch-text');
+                    }, 300);
+                }
+            }, 100);
+            
+            // Start matrix animation with faster speed
+            const matrixInterval = setInterval(drawLoadingMatrix, 25);
+            
+            // Clear interval when loading is done
+            setTimeout(() => {
+                clearInterval(matrixInterval);
+            }, duration);
+        }
+        
+        // Add loading screen to buttons and links, but exclude form elements
+        document.addEventListener('DOMContentLoaded', () => {
+            // Apply to buttons and links, but not to input fields or form elements
+            const allClickableElements = document.querySelectorAll('a, button, .btn, .card, [role="button"]');
+            
+            allClickableElements.forEach(element => {
+                element.addEventListener('click', (e) => {
+                    // Check if the click is on or within a form input element
+                    const isFormElement = e.target.closest('input, textarea, select, label, .form-control, [contenteditable="true"]');
+                    
+                    // Skip loading screen for form elements and inputs
+                    if (isFormElement || element.closest('input, textarea, select, label, .form-control, [contenteditable="true"]')) {
+                        return;
+                    }
+                    
+                    // Only exclude external links that open in new tabs
+                    if (element.getAttribute('target') === '_blank') {
+                        return;
+                    }
+                    
+                    // For links that are same-page anchors, still show loading but make it shorter
+                    const isAnchorLink = element.getAttribute('href') && element.getAttribute('href').startsWith('#');
+                    
+                    // Show loading screen with appropriate duration
+                    showLoadingScreen(isAnchorLink ? 1000 : 2500);
+                    
+                    // For elements that don't navigate away, we need to hide the loading screen
+                    if (!element.getAttribute('href') && element.tagName !== 'BUTTON') {
+                        setTimeout(() => {
+                            document.getElementById('loading-screen').classList.remove('active');
+                        }, isAnchorLink ? 1000 : 2500);
+                    }
+                });
+            });
+            
+            // Handle form submissions
+            const forms = document.querySelectorAll('form');
+            forms.forEach(form => {
+                form.addEventListener('submit', () => {
+                    showLoadingScreen(3000); // Longer loading for form submissions
+                });
+            });
+            
+            // Add a small loading animation on initial page load
+            setTimeout(() => {
+                showLoadingScreen(1500);
+            }, 300);
+        });
+    </script>
+    
+    <!-- Custom Cursor Script -->
+    <script>
+        // Custom cursor animation
+        const cursor = document.querySelector('.custom-cursor');
+        const cursorDot = document.querySelector('.cursor-dot');
+        
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+            
+            cursorDot.style.left = e.clientX + 'px';
+            cursorDot.style.top = e.clientY + 'px';
+        });
+        
+        // Hover effects for interactive elements
+        const interactiveElements = document.querySelectorAll('a, button, .card, .nav-link, .btn');
+        
+        interactiveElements.forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                cursor.style.width = '40px';
+                cursor.style.height = '40px';
+                cursor.style.borderColor = 'var(--neon-blue)';
+                cursor.style.backgroundColor = 'rgba(0, 150, 255, 0.1)';
+                
+                cursorDot.style.transform = 'translate(-50%, -50%) scale(1.5)';
+                cursorDot.style.backgroundColor = 'var(--neon-blue)';
+            });
+            
+            el.addEventListener('mouseleave', () => {
+                cursor.style.width = '20px';
+                cursor.style.height = '20px';
+                cursor.style.borderColor = 'var(--primary-color)';
+                cursor.style.backgroundColor = 'transparent';
+                
+                cursorDot.style.transform = 'translate(-50%, -50%) scale(1)';
+                cursorDot.style.backgroundColor = 'var(--primary-color)';
+            });
+        });
+        
+        // Add glitch effect to titles on hover
+        const titles = document.querySelectorAll('.hero-title, .section-title, h1, h2');
+        
+        titles.forEach(title => {
+            title.addEventListener('mouseenter', () => {
+                title.classList.add('animate__animated', 'animate__headShake');
+                setTimeout(() => {
+                    title.classList.remove('animate__animated', 'animate__headShake');
+                }, 1000);
+            });
+        });
+    </script>
+</body>
+</html>

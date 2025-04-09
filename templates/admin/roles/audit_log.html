@@ -1,0 +1,139 @@
+{% extends 'admin/layout.html' %}
+
+{% block title %}Role Management Audit Log{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Role Management Audit Log</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('roles.roles_list') }}">Roles</a></li>
+        <li class="breadcrumb-item active">Audit Log</li>
+    </ol>
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-history me-1"></i>
+            Audit Log
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="auditLogTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Date & Time</th>
+                            <th>User</th>
+                            <th>Action</th>
+                            <th>Entity Type</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in logs %}
+                        <tr>
+                            <td>{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            <td>{{ log.user.username }}</td>
+                            <td>
+                                {% if log.action == 'create' %}
+                                <span class="badge bg-success">Created</span>
+                                {% elif log.action == 'update' %}
+                                <span class="badge bg-primary">Updated</span>
+                                {% elif log.action == 'delete' %}
+                                <span class="badge bg-danger">Deleted</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ log.action }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if log.entity_type == 'role' %}
+                                <span class="badge bg-info">Role</span>
+                                {% elif log.entity_type == 'permission' %}
+                                <span class="badge bg-warning text-dark">Permission</span>
+                                {% elif log.entity_type == 'user_roles' %}
+                                <span class="badge bg-secondary">User Roles</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ log.entity_type }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-outline-primary view-details-btn" 
+                                        data-bs-toggle="modal" data-bs-target="#detailsModal"
+                                        data-details="{{ log.details }}">
+                                    View Details
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Details Modal -->
+<div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="detailsModalLabel">Audit Log Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="detailsContent">
+                    <div class="d-flex justify-content-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        // Initialize DataTable
+        $('#auditLogTable').DataTable({
+            order: [[0, 'desc']], // Sort by date descending
+            pageLength: 25
+        });
+        
+        // Setup details modal
+        $('.view-details-btn').on('click', function() {
+            const detailsJson = $(this).data('details');
+            try {
+                const details = JSON.parse(detailsJson);
+                let detailsHtml = '<div class="table-responsive"><table class="table table-bordered">';
+                
+                for (const key in details) {
+                    let value = details[key];
+                    
+                    // Format arrays nicely
+                    if (Array.isArray(value)) {
+                        value = value.map(item => `<span class="badge bg-secondary me-1">${item}</span>`).join(' ');
+                    }
+                    
+                    detailsHtml += `
+                        <tr>
+                            <th style="width: 30%;">${key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</th>
+                            <td>${value}</td>
+                        </tr>
+                    `;
+                }
+                
+                detailsHtml += '</table></div>';
+                $('#detailsContent').html(detailsHtml);
+            } catch (e) {
+                $('#detailsContent').html(`<div class="alert alert-danger">Error parsing details: ${e.message}</div>`);
+            }
+        });
+    });
+</script>
+{% endblock %}
